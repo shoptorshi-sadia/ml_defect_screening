@@ -1,7 +1,7 @@
 import pandas as pd
-import re
 import matplotlib.pyplot as plt
 from xgboost import XGBRegressor
+from pymatgen.core import Composition
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -11,12 +11,10 @@ df = pd.read_csv("perovskite_bulk_energy.csv")
 
 
 def get_fractions(formula):
-    matches = re.findall(r'([A-Z][a-z]*)(\d*\.?\d*)', str(formula))
-    comp = {}
-    for el, amt in matches:
-        comp[el] = float(amt) if amt else 1.0
-    total = sum(comp.values())
-    return {el: amt/total for el, amt in comp.items()} if total > 0 else {}
+    try:
+        return Composition(formula).fractional_composition.get_el_amt_dict()
+    except Exception:
+        return {}
 
 
 X = pd.DataFrame(df['formula'].apply(get_fractions).tolist()).fillna(0)
